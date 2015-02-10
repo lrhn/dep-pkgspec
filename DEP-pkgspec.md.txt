@@ -2,10 +2,10 @@
 
 ## Contact information
 
-Name: Lasse R.H. Nielsen  
-E-mail: lrn@google.com  
-[DEP Proposal Location][]  
-Further stakeholders:  
+Name: Lasse R.H. Nielsen
+E-mail: lrn@google.com
+[DEP Proposal Location][]
+Further stakeholders:
 - Johnni Winther - johnniwinther@google.com
 
 ## Summary
@@ -16,7 +16,7 @@ Specify Dart tools' "package:" URI resolution in a separate package-specificatio
 
 Dart tools currently resolve package-URIs using the "--package-root" command line parameter to specify a directory, and resolving the path-part of a package URI against this directory (defaulting to the "packages" sub-directory of the current working directory if no "--package-root" parameter is given).
 
-This approach has some shortcomings.
+This approach has some shortcommings.
 
 First and foremost, the packages must all be represented in a centralized location of a single file system.
 This is currently accomplished by creating a "packages" directory and creating a symbolic link to the "pub" cache location for each package.
@@ -85,7 +85,7 @@ Tools that need to support the "--package-spec" parameter includes the standalon
 ## Alternatives
 
 The simplest alternative is to keep using just the "--package-root" parameter.
-The shortcomings are not crippling in most cases, but it has some problems that are not easily solved.
+The shortcommings are not crippling in most cases, but it has some problems that are not easily solved.
 
 Alternative implementations of the same concept could be:
 
