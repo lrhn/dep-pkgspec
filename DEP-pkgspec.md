@@ -114,7 +114,7 @@ This change only affects tools, the language specification is unaffected.
 
 ### A working implementation
 
-An [initial implementaion] of reading and writing package specification files has been created.
+An [initial implementation][] of reading and writing package specification files has been created.
 This can be used as a starting point for Dart based tools to read the package specification.
 
 ### Tests
