@@ -89,7 +89,7 @@ The shortcomings are not crippling in most cases, but it has some problems that 
 
 Alternative implementations of the same concept could be:
 
-- Using a more complex format for the "pkgspec.properties" file, perhaps "pkgspec.yaml". This adds extra overhead and complexity, changing it from a line-based format to a structured format. This makes tools more complex, an since the file must be read on start-up, more complexity may increase the delay before code can start running. On the other hand, if we ever need to add more runtime project data, we would already have a file that we can just add more sections to.
+- Using a more complex format for the "pkgspec.properties" file, perhaps "pkgspec.yaml". This adds extra overhead and complexity, changing it from a line-based format to a structured format. This makes tools more complex, and since the file must be read on start-up, more complexity may increase the delay before code can start running. On the other hand, if we ever need to add more runtime project data, we would already have a file that we can just add more sections to.
 
 - Allowing more than one specification file on the command line, and perhaps allow imports in specification files. This would allow reuse of existing files, and patching together a configuration from partial configurations. Again this will increase start-up latency, and will probably require a more complex format.
 
@@ -114,7 +114,7 @@ This change only affects tools, the language specification is unaffected.
 
 ### A working implementation
 
-An [initial implementaion] of reading and writing package specification files has been created.
+An [initial implementation] of reading and writing package specification files has been created.
 This can be used as a starting point for Dart based tools to read the package specification.
 
 ### Tests
