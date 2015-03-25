@@ -2,10 +2,10 @@
 
 ## Contact information
 
-Name: Lasse R.H. Nielsen
-E-mail: lrn@google.com
-[DEP Proposal Location][]
-Further stakeholders:
+Name: Lasse R.H. Nielsen  
+E-mail: lrn@google.com  
+[DEP Proposal Location][]  
+Further stakeholders:  
 - Johnni Winther - johnniwinther@google.com
 - Ivan Posva - iposva@google.com
 
