@@ -56,35 +56,35 @@ The solution proposed here is:
 
 - Dart tools can load their "package"-URI resolution from a single file.
 - The proposed default name is "pkgspec.txt".
-- The file uses a simple single-line key/value format, similar to the Java `Properties` file format or the Windows `ini` file format. This format is deliberately kept simple and only does what is needed, in comformance with the KISS and YAGNI principples.
+- The file uses a simple single-line key/value format, similar to the Java `Properties` file format or the Windows `ini` file format. This format is deliberately kept simple and only does what is needed, in comformance with the KISS and YAGNI principles.
 - Tools that now support a "--package-root" parameter must also support a "--package-spec" parameter which takes a (non-package:) URI as argument.
 
 The file itself has the following format:
 - It is UTF-8 encoded (but non-ASCII characters may only occur in comments).
 - Lines are separated by CR (U+000A) or LF (U+000D) characters.
-- Empty lines are ignored (allowing CR+LF as line separator to work automaticaly).
+- Empty lines are ignored (allowing CR+LF as line separator to work automatically).
 - Lines starting with a `#` character are comments and are ignored.
 - All other lines must contain a `=` character.
 - The characters before the first `=` character is a package name. A package name is a URI path segment that is not `.` or `..`. The package name should be case and escape normalized except that any `=` must be percent escaped as `%3D`.
 - The characters after the first `=` character must be a URI reference. It should end in a `/`.
-- If the same package name occurs twice in the file (two entries that are equal after normalization), it is an error. The tool may fail, or it may give a warning and continue running using one of the entries. The error should never be accepted silently.
+- If the same package name occurs twice in the file (two entries that are equal after normalization), it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is acutally used in an import (similarly to when the same name is imported from two different libraries). 
 
 Most likely all package names will be valid Dart identifiers, so there will be no escapes. If the package name contains escapes, the system will normalize it so that it can be compared to the names used in "package:packageName/..." URIs.
 
-The URI reference be a relative URI, in which case it is resolved against the location of the package specification file itself. That is, a line like:
+The URI reference can be a relative URI, in which case it is resolved against the location of the package specification file itself. That is, a line like:
 
     homebrew=../../homebrew/lib
 
-will be resolved relative to the location of the package file. This should specifies a directory, so if the path does not end in a slash ('/'), then one will be added.
+will be resolved relative to the location of the package file. This should specify a directory, so if the path does not end in a slash ('/'), then one will be added.
 
 After loading and resolving the package-name/package-location pairs from the package specifcation, the tool will resolve "package" URIs using this information.
 
-For example, the import `import 'package:unittest/unittest.dart';` is resolved by first case and path normalizing the URI (to avoid spurious `..` path segments and to get then package name on a canonical form), then splitting it into the package name, `unittest` and the remainder of the path, `unittest.dart`.
+For example, the import `import 'package:unittest/unittest.dart';` is resolved by first case and path normalizing the URI (to avoid spurious `..` path segments and to get the package name into a canonical form), then splitting it into the package name, `unittest` and the remainder of the path, `unittest.dart`.
 If the `unittest` package was specified as:
 
     unittest=../../packages/unittest-0.9.9/lib
 
-in the specification file `/home/somebody/dart/project/smarty/pkgspec.txt`, then the base path of the package `unittest` is `/home/somebody/dart/packages/unittest-0.9.9/lib/`. The remaining path "unittest.dart" is resolved against this, getting `/home/somebody/dart/packages/unittest-0.9.9/lib/unittest.dart`.
+in the specification file `file:///home/somebody/dart/project/smarty/pkgspec.txt`, then the base path of the package `unittest` is `file:///home/somebody/dart/packages/unittest-0.9.9/lib/`. The remaining path "unittest.dart" is resolved against this, getting `file:///home/somebody/dart/packages/unittest-0.9.9/lib/unittest.dart`.
 
 As another example, the import `import 'package:unittest/../../bar/something.dart';` is first normalized to import `'package:bar/something.dart'` before it's resolved. This avoids clever URIs from escaping from the specified package locations and reading arbitrary files on the same system.
 
@@ -117,7 +117,7 @@ On the other hand, a structured format can be extended without affecting existin
 
 - Allowing extra white-space in the format at the start and end of a line and around the `=`. This allows, for example, aligning entries, but requires defining "whitespace" and (very) slightly increases the complexity of the parser. It's not necessary, but might be convenient. Just accepting space and tab is likely sufficient for most users, but it's also annoying to have other white-space characters not allowed if they are not visually distinguishable from allowed spaces.
 
-- A tool only looks for the `pkgspec.txt` file next to the entry point. It may be useful if the tool checks the parent directory as well, recursively, so that there is no need for extra pkgspec-files when running files in a sub-directory. This mainly makes sense for local files, so it could be done only if the entry-point is a file: URI. This still takes extra time in the case where there is no file in any higher-level directory, and the search reaches the root directory. Some file systems may have networked directories in the parent path, even if the current directory is on local disk, making the extra lookup potentially more expensive. If it's possible to do without this feature, I'd try without it at first. It can be added later.
+- A tool only looks for the `pkgspec.txt` file next to the entry point. It may be useful if the tool checks the parent directory as well, recursively, so that there is no need for extra pkgspec-files when running files in a sub-directory. This mainly makes sense for local files, so it could be done only if the entry-point is a file: URI. This still takes extra time in the case where there is no file in any higher-level directory, and the search reaches the root directory. Some file systems may have networked directories in the parent path, even if the current directory is on local disk, making the extra lookup potentially more expensive. If the goal is to be able to run `dart program.dart` on any dart file in a package without extra symlinks and without extra duplicates of the package-spec file, then recursive lookup is likely necessary.
 
 - Add sections like in Windows ini-files. A section is begun by a line like `[section name]` and reaches until the next section or the end of the file. Sections have no influence on resolution, but can allow tools that create or manipulate the pkgspec file to tag specific entries in the file. The same behavior can be achieved using recognizable comments (like in the first example above), but if the feature is useful, it is safer to have it supported explicitly instead of hacking it up using meaningful comments. Parsers that are uninterested in sections can treat a line starting with `[` as a comment. A `[` character is not valid in a path segment, so using it for comments is not ambiguous.
 
