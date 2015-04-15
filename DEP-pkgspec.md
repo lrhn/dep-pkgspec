@@ -56,23 +56,21 @@ The solution proposed here is:
 - They must still support the "packages" directory and "--package-root" argument for backwards compatibility.
 - The proposed default name is `packages.cfg`.
 - The file uses a simple line-based key/value format similar to Java properties files or Windows ini files. This format is deliberately kept so simple that parsing it is trivial. It can be directly read using a Java `Properties` object.
-- Tools that now support a "--package-root" parameter must also support a "--package-spec" parameter which takes a file name as argument.
+- Tools that now support a "--package-root" parameter must also support a "--package-path" parameter which takes a file name as argument.
 
-The file itself contains a list of key/value pairs, separated by a `=` character. The syntax is:
+The file itself contains a list of package name/package location pairs, separated by a `=` character. The syntax is:
 
 - File must be valid UTF-8 text (no overlong encodings). It can only contain non-ASCII characters in comments, so parsing can treat the file as ASCII.
 - Lines are separated by CR or NL characters.
 - Empty lines are ignored (so CR+NL can be used as line separator).
 - Lines starting with a `#` character are comments, and are otherwise ignored.
-- The remaining lines are key/value entries. They must contain a `=` character. - The characters before the first `=` is the key and the characters after is the value.
-- The key is a URI path segment which is not `.` or `..`.
-- The key should be URI escape and case normalized, except that any `=` character in the key needs to be percent-escaped as `%3D` (which a path segment normally does not require).
-- If the same package name occurs twice in the file (two entries that are equal after normalization), it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is acutally used in an import (similarly to when the same name is imported from two different libraries). 
-- The value is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package specification file. That is, a line like `homebrew=../../homebrew/lib` will be resolved relative to the location of the package file. This specifies a directory, so if the path does not end in a slash ('/'), then one is added automatically.
+- The remaining lines are key/value entries. They must contain a `=` character.
+- The characters before the first `=` is the package name and the characters after is the package location.
+- The package name is a valid Dart identifier: The first character must be either an ASCII letter ('a'-'z', 'A'-'Z'), underscore ('_') or dollar sign ('$'), there can be any number of following characters that are either ASCII letters, underscores, dollar signs or ASCII digits ('0'-'9').
+- If the same package name occurs twice in the file, it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is acutally used in an import (similarly to when the same name is imported from two different libraries).
+- The package location is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package specification file. That is, a line like `homebrew=../../homebrew/lib` will be resolved relative to the location of the package file. This must specify a directory, so if the path does not end in a slash ('/'), then one is added automatically.
 
-Most likely all package names will be valid Dart identifiers, so there will be no escapes. If the package name contains escapes, the system will normalize it so that it can be compared to the names used in "package:packageName/..." URIs.
-
-After loading and resolving the package-name/package-location pairs from the package specifcation, the tool will resolve "package" URIs using this information.
+After loading and resolving the package-name/package-location pairs from the package resolution file, the tool will resolve "package" URIs using this information.
 
 For example, the import `import 'package:unittest/unittest.dart';` is resolved by first case- and path-normalizing the URI (to avoid spurious `..` path segments and to get the package name into a canonical form), then splitting it into the package name, `unittest` and the remainder of the path, `unittest.dart`.
 
@@ -84,7 +82,7 @@ in the specification file `file:///home/somebody/dart/project/smarty/packages.cf
 
 As another example, the import `import 'package:unittest/../../bar/something.dart';` is first normalized to import `'package:bar/something.dart'` before it's resolved. This avoids clever URIs from escaping from the specified package locations and reading arbitrary files on the same system.
 
-If a tool gets neither a "--package-spec" or a "--package-root" command line parameter, it may look for a `packages.cfg` file next to the program entry point (which can then not be given using a package: URI). For example running an application like:
+If a tool gets neither a "--package-path" or a "--package-root" command line parameter, it may look for a `packages.cfg` file next to the program entry point (which can then not be given using a package: URI). For example running an application like:
 
     dart http://example.com/smarty/main.dart
 
@@ -95,12 +93,12 @@ If a tool does not find a `packages.cfg` file in that location, it should fall b
 As part of the implementation of this proposal, the "pub" tool should be changed to allow writing a `packages.cfg` file where it currently creates a "package" directory in a package's root directory.
 Pub should avoid automatically creating duplicate `packages.cfg` files in other locations.
 
-Tools that need to support the "--package-spec" parameter includes the standalone VM, dart2js, and dart-analyzer. 
+Tools that need to support the "--package-path" parameter includes the standalone VM, dart2js, and dart-analyzer.
 
 ### Look for `packages.cfg` recursively for local files.
 A tool is only required to look for the `packages.cfg` file next to the entry point. It would be useful if the tool checks the parent directory as well, recursively, so that there is no need for extra package resolution files when running files in a sub-directory. This mainly makes sense for local files, so it should be done only if the entry-point is a `file:` URI.
 
-We require that tools that are passed neither `--package-root` nor `--package-spec` as command line parameters with an entry point that is a `file:` URI must also *check* if a `packages` directory exists next to the entry point, and not just assume it.
+We require that tools that are passed neither `--package-root` nor `--package-path` as command line parameters with an entry point that is a `file:` URI must also *check* if a `packages` directory exists next to the entry point, and not just assume it.
 If the directory does not exist, the tool should check for the existence of a `packages.cfg` in the parent directory, and all the way along the path from the root file system root, stopping when the first file is found.
 
 This allows running `dart program.dart` on any dart file in a package without extra symlinks and without extra duplicates of the package resolution file, since the `packages.cfg` file in the root of the package directory will take presedence.
@@ -154,7 +152,7 @@ The Dart specification currently says that:
 It should be changed to something like:
 > A path-normalized URI of the form package:s/p is interpreted as a
 > relative URI of the form p resolved relative to an implementation specified
-> location depending on s.
+> location depending on s, where s must be a valid identifier.
 or even just:
 > A URI of the form `packages:s` is interpreted in an implementation specific
 > way by tools.
