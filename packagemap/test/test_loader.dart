@@ -6,15 +6,15 @@ library test_loader;
 
 import "dart:io";
 import "package:unittest/unittest.dart";
-import "package:packagecfg/packagecfg.dart";
-import "package:packagecfg/loader.dart";
+import "package:packagemap/packagemap.dart";
+import "package:packagemap/loader.dart";
 
 main() {
   test("load", () {
     // Test works if run from text/ directory or package root directory.
-    var file = new File("sample-packages.cfg");
+    var file = new File("sample-packages.map");
     if (!file.existsSync()) {
-      file = new File("test/sample-packages.cfg");
+      file = new File("test/sample-packages.map");
     }
     return loadPackageConfig(file.absolute)
     .then((Packages packages) {

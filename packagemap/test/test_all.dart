@@ -5,10 +5,10 @@
 library test_all;
 
 import "package:unittest/unittest.dart";
-import "package:packagecfg/packagecfg.dart";
+import "package:packagemap/packagemap.dart";
 
 main() {
-  var base = Uri.parse("file:///one/two/three/packages.cfg");
+  var base = Uri.parse("file:///one/two/three/packages.map");
   test("empty", () {
     var packages = Packages.parse(emptySample, base);
     expect(packages.packageMapping, isEmpty);

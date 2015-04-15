@@ -3,9 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /// Helper library for `packagecfg` that uses `dart:io` to save and load files.
-library packagecfg.loader;
+library packagemap.loader;
 
-import "packagecfg.dart";
+import "packagemap.dart";
 import "dart:io";
 import "dart:async";
 
