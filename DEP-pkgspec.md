@@ -67,7 +67,7 @@ The file itself contains a list of package name/package location pairs, separate
 - The remaining lines are key/value entries. They must contain a `=` character.
 - The characters before the first `=` is the package name and the characters after is the package location.
 - The package name is a valid Dart identifier: The first character must be either an ASCII letter ('a'-'z', 'A'-'Z'), underscore ('_') or dollar sign ('$'), there can be any number of following characters that are either ASCII letters, underscores, dollar signs or ASCII digits ('0'-'9').
-- If the same package name occurs twice in the file, it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is acutally used in an import (similarly to when the same name is imported from two different libraries).
+- If the same package name occurs twice in the file, it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is actually used in an import (similarly to when the same name is imported from two different libraries).
 - The package location is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package specification file. That is, a line like `homebrew=../../homebrew/lib` will be resolved relative to the location of the package file. This must specify a directory, so if the path does not end in a slash ('/'), then one is added automatically.
 
 After loading and resolving the package-name/package-location pairs from the package resolution file, the tool will resolve "package" URIs using this information.
@@ -93,7 +93,7 @@ The tool then resolves package URIs as if the `packages` directory had been spec
 
 3. If the entry point was `file:` URI and a `packages` directory was not found in the previous step, then the tool checks for the presence of a `packages.map` file in the parent directory of the entry point, and recursively check each parent directory up to the root directory until a `packages.map` file is found. That `packages.map` file is used to resolve package URIs.
 
-4. Otherwise, when no `packages.map` file was found in the previous step, the tool must refuse to handle pacakage URIs.
+4. Otherwise, when no `packages.map` file was found in the previous step, the tool must refuse to handle package URIs.
 
 The reason that step 3 is only taken for `file:` URIs is that there is no simple and safe way to check whether a directory exists on an HTTP server.
 Fetching `http://example.com/app/packages/` may fail even if `http://example.com/app/packages/foo/foo.dart` would succeed.
@@ -106,7 +106,7 @@ Tools that need to support the "--packages" parameter includes the standalone VM
 
 ## Alternatives and Variants
 
-There are a few tweaks that can be applied to the behavior above if it is deemed advantagous, but which should probably not be part of a first implementation.
+There are a few tweaks that can be applied to the behavior above if it is deemed advantageous, but which should probably not be part of a first implementation.
 
 ### Formatting tweaks
 The simple line-based syntax may be tweaked slightly.
@@ -141,11 +141,11 @@ Making package names special is a practical change. It allows for a later change
 ### Language specification changes
 
 The Dart specification currently says that:
-> A URI of the form package:s is interpreted as a URI of the form packages/s
+> A URI of the form `package:s` is interpreted as a URI of the form packages/s
 > relative to an implementation specified location.
 
 It should be changed to something like:
-> A path-normalized URI of the form package:s/p is interpreted as a
+> A path-normalized URI of the form `package:s/p` is interpreted as a
 > relative URI of the form p resolved relative to an implementation specified
 > location depending on s, where s must be a valid identifier.
 or even just:
@@ -154,7 +154,7 @@ or even just:
 
 ### A working implementation
 
-An example/initial package for reading and writing package resolution files has been created in the proposal repository (names packagemap).
+An example/initial package for reading and writing package resolution files has been created in the proposal repository's `packagemap` directory.
 This can be used as a starting point for Dart based tools to read the package specification.
 
 ### Tests
