@@ -9,7 +9,6 @@ class Packages {
   static const int _CR = 0x0d;
   static const int _NL = 0x0a;
   static const int _NUMBER_SIGN = 0x23;
-  static final _emptyUri = new Uri(path:"");
 
   final Map<String, Uri> packageMapping;
 
@@ -32,8 +31,7 @@ class Packages {
                                     "Path must not start with '/'.");
     }
     // Normalizes the path by removing '.' and '..' segments.
-    // Consider making path normalization available in URI class.
-    uri = _emptyUri.resolveUri(uri);
+    uri = uri.normalizePath();
     String path = uri.path;
     var slashIndex = path.indexOf('/');
     String packageName;
@@ -91,33 +89,20 @@ class Packages {
       if (eqIndex < 0) {
         throw new FormatException("No '=' on line", source, index - 1);
       }
-      var packageNameString = source.substring(start, eqIndex);
-      packageNameString = packageNameString.replaceAll("%3D", "=")
-                                           .replaceAll("%3d", "=");
-      var packageName = new Uri(path: packageNameString);
-      if (packageName.path.indexOf('/') >= 0) {
-        int index = source.indexOf('/', start);
-        throw new FormatException("Package-name contains '/'", source, index);
-      }
-      if (packageName.path == ".") {
-        throw new FormatException("Package-name must not be '.'",
-                                  source, start);
-      }
-      if (packageName.path == "..") {
-        throw new FormatException("Package-name must not be '..'",
-                                  source, start);
-      }
+      _checkIdentifier(source, start, eqIndex);
+      var packageName = source.substring(start, eqIndex);
+
       var packageLocation = Uri.parse(source, eqIndex + 1, end);
       if (!packageLocation.path.endsWith('/')) {
         packageLocation = packageLocation.replace(
             path: packageLocation.path + "/");
       }
       packageLocation = baseLocation.resolveUri(packageLocation);
-      if (result.containsKey(packageName.path)) {
+      if (result.containsKey(packageName)) {
         throw new FormatException("Same package name occured twice.",
                                   source, start);
       }
-      result[packageName.path] = packageLocation;
+      result[packageName] = packageLocation;
     }
     return new Packages(result);
   }
@@ -148,14 +133,8 @@ class Packages {
     }
 
     packageMapping.forEach((String packageName, Uri uri) {
-      // Validate packageName, escape '='.
-      Uri packageUri = new Uri(path: packageName);
-      if (packageUri.pathSegments.length > 1 ||
-          packageUri.path == "." ||
-          packageUri.path == "..") {
-        throw new FormatException("Invalid package-name", packageName);
-      }
-      packageName = packageUri.path.replaceAll('=', '%3D');
+      // Validate packageName.
+      _checkIdentifier(packageName, 0, packageName.length);
       output.write(packageName);
 
       output.write('=');
@@ -176,42 +155,6 @@ class Packages {
     StringBuffer buffer = new StringBuffer();
     write(buffer);
     return buffer.toString();
-  }
-
-  // Removes '.' and non-leading '..' from path.
-  static void _normalizePath(List pathSegments) {
-    int r = 0;
-    String seg;
-    foundDots: {
-      while (r < pathSegments.length) {
-        seg = pathSegments[r];
-        if (seg == '.' || seg == '..') {
-          break foundDots;
-        }
-        r++;
-      }
-      return;
-    }
-    int w = r;
-    int minW = 0;
-    while (true) {
-      if (seg == '..') {
-        if (w > minW) {
-          r++;
-          w--;
-        } else {
-          pathSegments[w] = seg;
-          w += 1;
-          minW = w;
-        }
-      } else if (seg != '.') {
-        pathSegments[w++] = seg;
-      }
-      r++;
-      if (r == pathSegments.length) break;
-      seg = pathSegments[r];
-    }
-    pathSegments.length = w;
   }
 
   static Uri relativize(Uri uri,
@@ -243,12 +186,12 @@ class Packages {
     }
 
     List<String> base = baseUri.pathSegments.toList();
-    _normalizePath(base);
+    base = base.normalizePath();
     if (base.isNotEmpty) {
       base = new List<String>.from(base)..removeLast();
     }
     List<String> target = uri.pathSegments.toList();
-    _normalizePath(target);
+    target = target.normalizePath();
     int index = 0;
     while (index < base.length && index < target.length) {
       if (base[index] != target[index]) {
@@ -263,6 +206,22 @@ class Packages {
           path: '../' * (base.length - index) + target.skip(index).join('/'));
     } else {
       return uri;
+    }
+  }
+
+  static void _checkIdentifier(String string, int start, int end) {
+    const int a = 0x61;
+    const int z = 0x7a;
+    const int _ = 0x5f;
+    const int $ = 0x24;
+    if (start == end) return false;
+    for (int i = start; i < end; i++) {
+      var char = string.codeUnitAt(i);
+      if (char == _ || char == $) continue;
+      if ((char ^ 0x30) <= 9 && i > 0) continue;
+      char |= 0x20;  // Lower-case letters.
+      if (char >= a && char <= z) continue;
+      throw new FormatException("Not an identifier", string, i);
     }
   }
 }

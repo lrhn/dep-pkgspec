@@ -86,21 +86,20 @@ main() {
            equals(base.resolve("../test/").resolve("bar/baz.dart")));
   });
 
-  test("all unreserved chars escaped", () {
-    var packages = Packages.parse(allUnreservedCharsEscapedSample, base);
-    expect(packages.packageMapping.keys.toList(), equals([allUnreservedChars]));
-    expect(packages.resolve(
-               Uri.parse("package:$allUnreservedChars/bar/baz.dart")),
-           equals(base.resolve("../test/").resolve("bar/baz.dart")));
+  test("no escapes", () {
+    expect(() => Packages.parse("x%41x=x", base), throws);
   });
 
-  test("invalid chars escaped", () {
-    var packages = Packages.parse(invalidCharsEscapedSample, base);
-    expect(packages.packageMapping.keys.toList(),
-           equals([invalidCharsEscaped]));
-    expect(packages.resolve(
-               Uri.parse("package:$invalidCharsEscaped/bar/baz.dart")),
-           equals(base.resolve("../test/").resolve("bar/baz.dart")));
+  test("not identifiers", () {
+    expect(() => Packages.parse("1x=x", base), throws);
+    expect(() => Packages.parse(" x=x", base), throws);
+    expect(() => Packages.parse("\\x41x=x", base), throws);
+    expect(() => Packages.parse("x@x=x", base), throws);
+    expect(() => Packages.parse("x[x=x", base), throws);
+    expect(() => Packages.parse("x`x=x", base), throws);
+    expect(() => Packages.parse("x{x=x", base), throws);
+    expect(() => Packages.parse("x/x=x", base), throws);
+    expect(() => Packages.parse("x:x=x", base), throws);
   });
 
   test("same name twice", () {
@@ -133,17 +132,10 @@ var singleAbsoluteSample = "foo=http://example.com/some/where/\n";
 var multiRelativeSample = "foo=../test/\nbar=../test2/\n";
 // All valid path segment characters in an URI.
 var allValidChars =
-    r"!$&'()*+,-.0123456789:;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    r"_abcdefghijklmnopqrstuvwxyz~";
+    r"$0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
 var allValidCharsSample = "${allValidChars.replaceAll('=', '%3D')}=../test/\n";
 var allUnreservedChars =
     "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
-var allUnreservedCharsEscapedSample =
-  "${allUnreservedChars.codeUnits.map((v) => "%${v.toRadixString(16)}").join()}"
-  "=../test/\n";
-var invalidChars = "\x00\x1f\u03c0";
-var invalidCharsEscaped = "%00%1F%CF%80";
-var invalidCharsEscapedSample = "$invalidCharsEscaped=../test/\n";
 
 // Invalid samples.
 var invalid = [
