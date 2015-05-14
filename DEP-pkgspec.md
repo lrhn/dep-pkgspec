@@ -81,6 +81,8 @@ in the configuration file `file:///home/somebody/dart/project/smarty/packages.cf
 
 As another example, the import `import 'package:unittest/../../bar/something.dart';` is first normalized to import `'package:bar/something.dart'` before it's resolved. This avoids clever URIs from escaping from the specified package locations and reading arbitrary files on the same system.
 
+## Resolving package: URIs
+
 If a tool gets neither a "--packages" or a "--package-root" command line parameter, it should look for a way to resolve package URIs as follows:
 
 1. Look for a `packages.cfg` file next to the program entry point (which can then not be given using a package: URI). For example running an application like:  
