@@ -5,11 +5,11 @@
 /// Helper library for `packagecfg` that uses `dart:io` to save and load files.
 library packagemap.loader;
 
-import "packagemap.dart";
+import "packages_file.dart";
 import "dart:io";
 import "dart:async";
 
-/// Loads a `packages.cfg` file and parse the content into a [Packages] object.
+/// Loads a `.packages` file and parse the content into a [Packages] object.
 Future<Packages> loadPackageConfig(File inputFile) {
   Uri fileUri = new Uri.file(inputFile.path);
   return inputFile.readAsString().then((String source) {
@@ -17,7 +17,7 @@ Future<Packages> loadPackageConfig(File inputFile) {
   });
 }
 
-/// Saves a [Packages] object to a `packages.cfg` file.
+/// Saves a [Packages] object to a `.packages` file.
 Future savePackageConfig(File outputFile, Packages packages) {
   // NOT TESTED.
   Uri fileUri = new Uri.file(outputFile.path);

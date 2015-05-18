@@ -1,4 +1,4 @@
-name: packagemap
+name: packages_file
 version: 0.1.0
 author: Dart Team <misc@dartlang.org>
 description: Read and write packages.map files.

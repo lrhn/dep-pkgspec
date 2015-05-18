@@ -51,7 +51,7 @@ class Packages {
     return packageLocation.resolveUri(new Uri(path: rest));
   }
 
-  /// Parses a `packages.cfg` file into a `Packages` object.
+  /// Parses a `.packages` file into a `Packages` object.
   ///
   /// The [baseLocation] is used as a base URI to resolve all relative
   /// URI references against.
