@@ -5,7 +5,7 @@
 library test_all;
 
 import "package:unittest/unittest.dart";
-import "package:packages_file/packags_file.dart";
+import "package:packages_file/packages_file.dart";
 
 main() {
   var base = Uri.parse("file:///one/two/three/.packages");
