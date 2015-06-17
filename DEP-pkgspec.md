@@ -65,7 +65,7 @@ The file itself contains a list of package name/package location pairs, separate
 - Lines starting with a `#` character are comments, and are otherwise ignored.
 - The remaining lines are key/value entries. They must contain a `:` character.
 - The characters before the first `:` is the package name and the characters after is the package location.
-- The package name is is any seqeuence of valid URI path characters ([RFC 3986] `pchar`) except for percent encodings and colon (':', U+0058) - that is, the RFC characters corresponding to `unreserved / sub-delims / '@'`. Rationale: The name must be usable both as a directory name and a URI path segment, preferably without conversion. By using a subset of `pchar` without percent encodings, the name can be used directly in a URI. By disallowing '/', '\' and ':' (where only colon is a `pchar`), the name can be used as a directory name on most common file systems.
+- The package name is is any seqeuence of valid URI path characters ([RFC 3986] `pchar`) except for percent encodings and colon (':', U+0058) - that is, the RFC characters corresponding to `unreserved / sub-delims / '@'`, and must contain at least one non-'.' character. Rationale: The name must be usable both as a directory name and a URI path segment, preferably without conversion. By using a subset of `pchar` without percent encodings, the name can be used directly in a URI. By disallowing '/', '\' and ':' (where only colon is a `pchar`), as well as the names '.' and '..', the name can be used as a directory name on most common file systems.
 - If the same package name occurs twice in the file, it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is actually used in an import (similarly to when the same name is imported from two different libraries).
 - The package location is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package resolution configuration file. That is, a line like `homebrew:../../homebrew/lib` will be resolved relative to the location of the package file. This must specify a directory, so if the path does not end in a slash ('/'), then one is added automatically.
 
@@ -146,10 +146,6 @@ The Dart specification currently says that:
 > relative to an implementation specified location.
 
 It should be changed to something like:
-> A path-normalized URI of the form `package:s/p` is interpreted as a
-> relative URI of the form p resolved relative to an implementation specified
-> location depending on s, where s must be a valid identifier.
-or even just:
 > A URI of the form `packages:s` is interpreted in an implementation specific
 > way by tools.
 
