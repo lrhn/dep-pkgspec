@@ -64,10 +64,10 @@ The file itself contains a list of package name/package location pairs, separate
 - Empty lines are ignored (so CR+NL can be used as line separator).
 - Lines starting with a `#` character are comments, and are otherwise ignored.
 - The remaining lines are key/value entries. They must contain a `:` character.
-- The characters before the first `:` is the package name and the characters after is the package location.
-- The package name is is any seqeuence of valid URI path characters ([RFC 3986] `pchar`) except for percent encodings and colon (':', U+0058) - that is, the RFC characters corresponding to `unreserved / sub-delims / '@'`, and must contain at least one non-'.' character. Rationale: The name must be usable both as a directory name and a URI path segment, preferably without conversion. By using a subset of `pchar` without percent encodings, the name can be used directly in a URI. By disallowing '/', '\' and ':' (where only colon is a `pchar`), as well as the names '.' and '..', the name can be used as a directory name on most common file systems.
+- The characters before the first `:` are the package name and the characters after are the package location.
+- The package name is is any sequence of valid URI path characters ([RFC 3986] `pchar`) except for percent encodings and colon (':', U+0058) - that is, the RFC characters corresponding to `unreserved / sub-delims / '@'`, and must contain at least one non-'.' character. Rationale: The name must be usable both as a directory name and a URI path segment, preferably without conversion. By using a subset of `pchar` without percent encodings, the name can be used directly in a URI. By disallowing '/', '\' and ':' (where only colon is a `pchar`), as well as the names '.' and '..', the name can be used as a directory name on most common file systems.
 - If the same package name occurs twice in the file, it is an error. The tool may fail immediately when detecting the duplicate definition, or it may give a warning and continue running and not fail until the package name is actually used in an import (similarly to when the same name is imported from two different libraries).
-- The package location is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package resolution configuration file. That is, a line like `homebrew:../../homebrew/lib` will be resolved relative to the location of the package file. This must specify a directory, so if the path does not end in a slash ('/'), then one is added automatically.
+- The package location is a URI reference. It may be a relative URI, in which case it is resolved against the location of the package resolution configuration file. That is, a line like `homebrew:../../homebrew/lib` will be resolved relative to the location of the package file. This must specify a directory, so if the path does not end in a slash ('/'), then one is added automatically. If the resolved package location URI is itself a `package:` URI, it won't work - it's not intended to be resolved repeatedly, and if the platform can load `package:`-locations directly it doesn't need a `.packages` file.
 
 After loading and resolving the package-name/package-location pairs from the package resolution configuration file, the tool will resolve "package" URIs using this information.
 
@@ -99,11 +99,26 @@ The tool then resolves package URIs as if the `packages` directory had been spec
 The reason that step 3 is only taken for `file:` URIs is that there is no simple and safe way to check whether a directory exists on an HTTP server.
 Fetching `http://example.com/app/packages/` may fail even if `http://example.com/app/packages/foo/foo.dart` would succeed.
 
+### Loading a package: URI using a `.packages` file
 
-As part of the implementation of this proposal, the "pub" tool should be changed to allow writing a `.packages` file where it currently creates a "package" directory in a package's root directory.
-Pub should avoid automatically creating duplicate `.packages` files in other locations.
+A `.packages` file is read and converted to a map from package name to location URI.
 
-Tools that need to support the "--packages" parameter includes the standalone VM, dart2js, the development compiler and the dart-analyzer.
+Resolving a URI like `package:foo/bar/baz.dart` is then performed by:
+
+1. Looking up `foo` in the location map. If it is not there, resolution fails and the package file cannot be loaded.
+2. If lookup succeeds and finds a location URI, the relative path `bar/baz.dart` is resolved wrt. that location.
+3. If the result has an unknown or unsupported scheme, then loading fails. This includes URIs with a `package:` scheme - those are resolved again.
+4. Otherwise the platform tries to load the file.
+
+### Loading a package: URI using a `packages/` directory
+
+A `packages/` directory is given by a URI.
+
+Resolving a URI like `package:foo/bar/baz.dart` is then performed by:
+
+1. Resolving the path "foo/bar/baz.dart" against the packages directory URI.
+3. If the result has an unknown or unsupported scheme, then loading fails. This includes URIs with a `package:` scheme - those are not resolved again. This can typically be detected earlier because the directory URI has the same scheme.
+4. Otherwise the platform tries to load the file.
 
 ## Alternatives and Variants
 
@@ -153,6 +168,16 @@ It should be changed to something like:
 
 An example/initial package for reading and writing package resolution configuration files has been created as `package:package_config`.
 This can be used by Dart based tools to read and write the package configuration.
+
+### Creating `.packages` files.
+As part of the implementation of this proposal, the "pub" tool should be changed to allow writing a `.packages` file where it currently creates a "package" directory in a package's root directory.
+Pub should avoid automatically creating duplicate `.packages` files in other locations.
+
+### Consuming `.packages` files.
+Tools that need to support the "--packages" parameter includes the standalone VM, dart2js, the development compiler and the dart-analyzer.
+
+A Dart package is developed with support for reading and writing
+`.packages` files and determining resolution strategy.
 
 ### Tests
 
